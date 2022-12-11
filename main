@@ -27,7 +27,7 @@ def get_posts(username, last_post_hash_hex):
         "Username": username,
         "ReaderPublicKeyBase58Check": "",
         "LastPostHashHex": last_post_hash_hex,
-        "NumToFetch": 4,
+        "NumToFetch": 1,
         "MediaRequired": False
     }
     response = requests.post(url, json=data)
@@ -35,6 +35,8 @@ def get_posts(username, last_post_hash_hex):
     if response_json["LastPostHashHex"]:
         last_post_hash_hex = response_json["LastPostHashHex"]
     return response_json["Posts"], last_post_hash_hex
+
+
 def print_posts(username, last_post_hash_hex):
     posts, last_post_hash_hex = get_posts(username, last_post_hash_hex)
     if not posts:
@@ -73,24 +75,45 @@ def challenge():
     email = input("")
 
 def challengeHelper(challengeType):
-
+    recipient = input("Who are you writing this email to?")
+    sender = input("Alright, what is your name?")
     greeting = input("First, create a greeting:")
     body = input("Now, include everything you want to say (do not include the ending!) here:")
     ending = input("Alright, now create an ending for your email:")
+
+    username = input("Finally, we need your username for verification purposes.")
+
+    dumper = {
+        "username": username,
+        "body": body
+
+    }
+    with open("sample.json", "w") as outfile:
+        json.dump(dumper, outfile)
+
+    score = 0
+    if recipient in greeting:
+        score+=1
+    else:
+        print("You need to make sure to include the recipients name in your greeting!")
+    
+    # function(bodyJSON)
+    json.load(body, "")
+
     # Send params to your function muntaser! 
 
 
 def syllabus():
-    option = input("Are you a teacher or a student?")
-    if "teacher" in option:
+    option = input("Are you a teacher or a student? ")
+    if "teacher" in option or "Teacher" in option:
         teacherMode()
-    elif "student" in option:
+    elif "student" in option or "Student" in option:
         studentMode()
     else:
         print("Sorry, we could not understand your request")
     
 def studentMode():
-    username = input("Please indicate your UserName\n")
+    username = input("Enter your teacher's username\n")
     get_profile(username)
 
     last_post_hash_hex = ''
@@ -114,11 +137,11 @@ def studentMode():
 def teacherMode():
     url = "https://bitclout.com/api/v0/submit-post"
 
-    print("todo GET THE MODULES IMPORTED :SOB: ") # GET MODULES 
+
     # GET MODULES :SOB:
     seedHex = input("What is your seedhex?")
     clear()
-    message = input("What's the post you'd like to post?\n")
+    message = input("What email/announcement would you like to make?\n")
     public_key = "BC1YLhWEW4M2ND5zz3gx4gKGUQniZ4339vrSzXVGNhB9kGDi3Edb4Pa"
     data = {
     "UpdaterPublicKeyBase58Check": public_key,
@@ -136,7 +159,6 @@ def teacherMode():
     response_json = response.json()
 
     transactionHex = response_json["TransactionHex"]
-    print(transactionHex)
 
     signedTransactionHex = Sign_Transaction(seedHex, transactionHex)
 
@@ -145,7 +167,7 @@ def teacherMode():
     response2 = requests.post(url2, json=data2)
     response2_json = response2.json()
 
-    print("Thank you for submitting your syllabus.")
+    print("Thank you for submitting this announcement/email!")
 def draft():
     print("You chose to draft your email. Please follow the prompts to enter the appropriate information. A sample of different emails will be outputted.")
 
