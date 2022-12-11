@@ -1,0 +1,163 @@
+import json
+import requests
+from termcolor import cprint
+from Sign import Sign_Transaction
+from os import system, name
+def get_profile(username):
+    url = 'https://bitclout.com/api/v0/get-single-profile'
+    data = {
+        "Username": username,
+        "PublicKeyBase58Check": "",
+    }
+    response = requests.post(url, json=data)
+    response_json = response.json()
+
+
+def clear():
+    if name == 'nt':
+        _ = system('cls')
+    else:
+        _ = system('clear')
+
+
+def get_posts(username, last_post_hash_hex):
+    url = 'https://bitclout.com/api/v0/get-posts-for-public-key'
+    data = {
+        "PublicKeyBase58Check": "",
+        "Username": username,
+        "ReaderPublicKeyBase58Check": "",
+        "LastPostHashHex": last_post_hash_hex,
+        "NumToFetch": 4,
+        "MediaRequired": False
+    }
+    response = requests.post(url, json=data)
+    response_json = response.json()
+    if response_json["LastPostHashHex"]:
+        last_post_hash_hex = response_json["LastPostHashHex"]
+    return response_json["Posts"], last_post_hash_hex
+def print_posts(username, last_post_hash_hex):
+    posts, last_post_hash_hex = get_posts(username, last_post_hash_hex)
+    if not posts:
+        return None
+    for post in posts:
+        print("_" * 30)
+        if post["Body"]:
+            print(post["Body"])
+            if post["RepostedPostEntryResponse"]:
+                cprint(post["RepostedPostEntryResponse"]["Body"], 'blue')
+        else:
+            cprint(post["RepostedPostEntryResponse"]["Body"], 'blue')
+    return last_post_hash_hex
+
+def choosePath():
+    output = input("Thanks for choosing [need to fill] to [need to fill]. Please enter whether you want to (1) Score Your Email (2) Push Your Syllabus or (3) Draft an Email: ")
+    if output == int(1):
+        challenge()
+
+    if output == int(2):
+        syllabus()
+
+    else:
+        draft()
+
+def challenge():
+    print("You chose Challenge. We will give you a variety of prompts and you will draft an email in under 350 words. We will then give you a score on how well your email is written and meets the purpose.")
+    print("Prompt 1: Write an email to an old colleague to ask them more about the work they are doing and how they like it at their company.")
+    email = input("") 
+    #Make them write a intro, body, ending
+    #Send stuff to 
+    #Storing stuff
+    print("Prompt 2: Write an email to a company asking about an out of stock item you have been wanting to buy. Mention you have a discount coupon and if that can be applied.")
+    email = input("")
+    print("Prompt 3: Write an email inviting your friends to a holiday party. Make sure you mention if it is a potluck and who needs to bring what.")
+    email = input("")
+
+def challengeHelper(challengeType):
+
+    greeting = input("First, create a greeting:")
+    body = input("Now, include everything you want to say (do not include the ending!) here:")
+    ending = input("Alright, now create an ending for your email:")
+    # Send params to your function muntaser! 
+
+
+def syllabus():
+    option = input("Are you a teacher or a student?")
+    if "teacher" in option:
+        teacherMode()
+    elif "student" in option:
+        studentMode()
+    else:
+        print("Sorry, we could not understand your request")
+    
+def studentMode():
+    username = input("Please indicate your UserName\n")
+    get_profile(username)
+
+    last_post_hash_hex = ''
+    cprint("*" * 30, "green")
+    cprint(f"Posts for {username}", "green")
+    cprint("*" * 30, "green")
+    while True:
+        last_post_hash_hex = print_posts(username, last_post_hash_hex)
+        if last_post_hash_hex:
+            cprint(
+                "If there are more posts, would you like to continue? (Y/N)",
+                "green")
+            user_reponse = input("\n")
+            if user_reponse[0].upper() != "Y":
+                cprint("Goodbye!", 'red')
+                break
+        else:
+            cprint(f"No more posts from {username}.", "red")
+            break
+
+def teacherMode():
+    url = "https://bitclout.com/api/v0/submit-post"
+
+    print("todo GET THE MODULES IMPORTED :SOB: ") # GET MODULES 
+    # GET MODULES :SOB:
+    seedHex = input("What is your seedhex?")
+    clear()
+    message = input("What's the post you'd like to post?\n")
+    public_key = "BC1YLhWEW4M2ND5zz3gx4gKGUQniZ4339vrSzXVGNhB9kGDi3Edb4Pa"
+    data = {
+    "UpdaterPublicKeyBase58Check": public_key,
+    "PostHashHexToModify": "",
+    "ParentStakeID": "",
+    "Title": "",
+    "BodyObj": {"Body": message, "ImageURLs": []},
+    "RecloutedPostHashHex": "",
+    "PostExtraData": {"Title":"this is the title of my post.", "geo_lat" : "33.00", "geo_lon" : "-117.00"},
+    "Sub": "",
+    "IsHidden":  False,
+    "MinFeeRateNanosPerKB": 1000
+    }
+    response = requests.post(url, json=data)
+    response_json = response.json()
+
+    transactionHex = response_json["TransactionHex"]
+    print(transactionHex)
+
+    signedTransactionHex = Sign_Transaction(seedHex, transactionHex)
+
+    url2 = "https://bitclout.com/api/v0/submit-transaction"
+    data2 = {"TransactionHex": signedTransactionHex}
+    response2 = requests.post(url2, json=data2)
+    response2_json = response2.json()
+
+    print("Thank you for submitting your syllabus.")
+def draft():
+    print("You chose to draft your email. Please follow the prompts to enter the appropriate information. A sample of different emails will be outputted.")
+
+    name = input("Please enter your name: ")
+    receiver = input("Please enter the email of the person you are writing the email to: ")
+
+    greeting = input("Please choose a greeting (1) Hi or Hello (2) Good Morning / Afternoon / Evening (3) Dear (4) To Whom it May Concern: ")
+    purpose = input("Please enter the purpose of your email: ")
+
+
+
+
+
+
+syllabus()
